@@ -35,10 +35,10 @@ namespace PHPSTORM_META
         '\App\Contracts\Repositories\BookmarkRepositoryContract' => '\App\Repositories\BookmarkRepository',
         '\App\Contracts\Repositories\AdminActionRepositoryContract' => '\App\Repositories\AdminActionRepository',
         '\App\Contracts\Repositories\AccessRightRepositoryContract' => '\App\Repositories\AccessRightRepository',
-        '\App\Contracts\Repositories\AccessClassRepositoryContract' => '\App\Repositories\SolarInsolation',
+        '\App\Contracts\Repositories\AccessClassRepositoryContract' => '\App\Repositories\SolarInsolationRepository',
 
 
-        '\App\Contracts\Services\SettingServiceContract' => '\App\Services\SolarInsolation',
+        '\App\Contracts\Services\SettingServiceContract' => '\App\Services\SolarInsolationService',
         '\App\Contracts\Services\FileServiceContract' => '\App\Services\FileService',
 
         '\App\Contracts\Elastic\MaterialIndexContract' => '\App\Elastic\Indexes\MaterialIndex',

@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'minio'),
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,16 +43,6 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-
-        'minio' => [
-            'driver' => 'minio',
-            'key' => env('MINIO_KEY'),
-            'secret' => env('MINIO_SECRET'),
-            'region' => env('MINIO_REGION'),
-            'bucket' => env('MINIO_BUCKET','test'),
-            'endpoint' => env('MINIO_ENDPOINT')
-        ],
-        'cloud' => env('FILESYSTEM_CLOUD', 'minio'),
     ],
 
     /*
