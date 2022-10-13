@@ -14,6 +14,12 @@ class WebController extends Controller
         $mapInitCoordinates = [41, 75];
         $mapInitZoom = 6;
         $countryPolygonCoordinates = app(CoordinateServiceContract::class)->getCountryPolygonCoordinates();
-        return Inertia::render('MainPage', compact('mapInitCoordinates', 'countryPolygonCoordinates', 'mapInitZoom'));
+        $mapBounds = app(CoordinateServiceContract::class)->getCountryBounds();
+        return Inertia::render('MainPage', compact(
+            'mapInitCoordinates',
+            'countryPolygonCoordinates',
+            'mapInitZoom',
+            'mapBounds',
+        ));
     }
 }

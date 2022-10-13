@@ -16,6 +16,25 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
     const TOTAL_FIELD = 'total';
     const DIRECT_FIELD = 'direct';
 
+    public function getHeatmap(array $params)
+    {
+        $point = [
+            'x' => 100,
+            'y' => 100,
+            'value' => 50,
+        ];
+        $data = [
+            $point,
+            $point,
+        ];
+
+        return [
+            'max' => 20,
+            'min' => 0,
+            'data' => $data,
+        ];
+    }
+
     public function importFile(string $filePath, ?callable $notify = null)
     {
         try {

@@ -1,31 +1,28 @@
 <?php
 
+
 namespace App\Http\Controllers\Api;
 
-use App\Contracts\Services\AuthServiceContract;
+use App\Contracts\Services\SolarInsolationServiceContract;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\RefreshTokenRequest;
-use App\Http\Requests\User\UserAuthorizeRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ApiController extends Controller
 {
-    public function login(UserAuthorizeRequest $request): array
+    public function heatmap(Request $request)
     {
-        return app(AuthServiceContract::class)->login($request->validated());
-    }
+        $params = [
+            'latitude' => floatval($request->get('latitude')),
+            'longitude' => floatval($request->get('longitude')),
+            'pixLatitude' => intval($request->get('pixLatitude')),
+            'pixLongitude' => intval($request->get('pixLongitude')),
+            'bounds' => json_decode($request->get('bounds'), true),
+            'full' => $request->get('full') === 'true',
+            'diffuse' => $request->get('diffuse') === 'true',
+            'direct' => $request->get('direct') === 'true',
+        ];
 
-    public function logout(): bool
-    {
-        return app(AuthServiceContract::class)->logout();
-    }
-
-    public function refresh(RefreshTokenRequest $request): array
-    {
-        return app(AuthServiceContract::class)->refreshToken($request->validated());
-    }
-
-    public function check(): array
-    {
-        return app(AuthServiceContract::class)->check();
+        return new JsonResponse(app(SolarInsolationServiceContract::class)->getHeatmap($params),);
     }
 }
