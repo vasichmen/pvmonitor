@@ -60,7 +60,7 @@
             ref="map"
             class="ymap__area"
             :coords="mapInitCoordinates"
-            :zoom="mapInitZoom"
+            :zoom.sync="zoom"
             :bounds="mapBounds"
             :controls="['zoomControl','typeSelector']"
             @boundschange="onBoundsChange"
@@ -123,42 +123,69 @@
       },
 
       heatmapParams: {
-
         latitude: '',
         longitude: '',
-        pixLatitude: '',
-        pixLongitude: '',
+        height: '',
+        width: '',
         full: false,
         diffuse: false,
         direct: false,
         bounds: {
-          topLeft: { lat: 0, lon: 0 },
-          bottomRight: { lat: 0, lon: 0 },
+          min: { lat: 0, lon: 0 },
+          max: { lat: 0, lon: 0 },
         },
       },
 
-      mapDragging:false,
       canInteractive: false,
+      heatmapFactory: null,
+      heatmapTarget: null,
       heatmap: null,
+      rendering: false,
+      zoom: 8,
     }
     ),
     computed: {
+      /**
+       * скрытие тепловой карты до готовности контейнера, отсутствия данных и на некоторых масштабах
+       * @returns {boolean}
+       */
       canShowHeatmap() {
-        return this.canInteractive && !this.mapDragging
-          && (this.heatmapParams.full || this.heatmapParams.direct || this.heatmapParams.diffuse);
+        return this.canInteractive
+          && (this.heatmapParams.full || this.heatmapParams.direct || this.heatmapParams.diffuse
+          )
+          && (this.zoom > 6 && this.zoom < 14
+          );
+      },
+      heatmapPointsLimit() {
+        return 5000;
+      },
+      /**
+       * коэффициенты подобраны вручную для лучшей визуализации
+       * @returns {number}
+       */
+      heatmapPointRadius() {
+        switch (this.zoom) {
+          case 6:
+            return 3;
+          case 7:
+            return 6;
+          case 8:
+            return 8;
+          case 9:
+            return 9;
+          case 10:
+            return 11;
+          case 11:
+            return 20;
+          case 12:
+            return 40;
+          case 13:
+            return 80;
+          default: throw Error('Этот масшаб не реализован');
+        }
       },
     },
     watch: {
-      ['heatmapParams.latitude']: {
-        handler() {
-          this.renderHeatmap();
-        },
-      },
-      ['heatmapParams.longitude']: {
-        handler() {
-          this.renderHeatmap();
-        },
-      },
       ['heatmapParams.full']: {
         handler() {
           this.renderHeatmap();
@@ -181,29 +208,28 @@
 
       this.fillHeatmapParams(this.mapInitCoordinates[0], this.mapInitCoordinates[1], this.$refs.map.bounds);
 
-      let HeatmapFactory = initHeatmap();
-      let map = document.getElementById('map');
-      this.heatmap = HeatmapFactory.create({
-        container: map,
-      });
+      this.heatmapTarget = document.getElementById('map');
+      this.heatmapFactory = initHeatmap();
     },
     methods: {
       onBoundsChange(event) {
-        const coords = event.get('newCenter');
-        const pixCoords = event.get('newGlobalPixelCenter');
-        this.fillHeatmapParams(coords[0], coords[1], event.get('newBounds'), pixCoords[0], pixCoords[1]);
+        setTimeout(() => {
+          const coords = event.get('newCenter');
+          this.fillHeatmapParams(coords[0], coords[1], event.get('newBounds'));
+          this.renderHeatmap();
+        }, 100);
       },
-      fillHeatmapParams(lat, lon, bounds, pixLat, pixLon) {
+      fillHeatmapParams(lat, lon, bounds) {
         this.heatmapParams.latitude = lat;
         this.heatmapParams.longitude = lon;
-        this.heatmapParams.pixLatitude = pixLat;
-        this.heatmapParams.pixLongitude = pixLon;
+        this.heatmapParams.height = this.$refs.map.$el.clientHeight;
+        this.heatmapParams.width = this.$refs.map.$el.clientWidth;
         this.heatmapParams.bounds = {
-          topLeft: {
+          min: {
             lat: bounds[0][0],
             lon: bounds[0][1],
           },
-          bottomRight: {
+          max: {
             lat: bounds[1][0],
             lon: bounds[1][1],
           },
@@ -218,15 +244,44 @@
        * @returns {Promise<void>}
        */
       async renderHeatmap() {
-        this.heatmap.setData({ max: 0, min: 0, data: [] });
+        //если уже была создана тепловая карта, то удаляем
+        if (this.heatmap) {
+          const tag = document.getElementById('heatmap-canvas');
+          if (tag)
+            tag.remove();
+        }
+
         if (!this.canShowHeatmap) {
           return;
         }
 
-        let response = await axios.get('/api/v1/solar-insolation/heatmap', {
-          params: this.heatmapParams,
+        //прерываем предыдкщий запрос
+        if (this.rendering) {
+          this.abortHeatmapRequestController.abort();
+        }
+
+        this.rendering = true;
+
+        console.log(this.$refs.map.zoom);
+
+        this.heatmap = this.heatmapFactory.create({
+          container: this.heatmapTarget,
+          radius: this.heatmapPointRadius,
+          maxOpacity: .2,
+          minOpacity: 0,
+          blur: 0.9,
         });
+
+
+        this.abortHeatmapRequestController = new AbortController();
+        let response = await axios.get('/api/v1/solar-insolation/heatmap', {
+          params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
+          signal: this.abortHeatmapRequestController.signal,
+        });
+
         this.heatmap.setData(response.data);
+
+        this.rendering = false;
       },
     },
   };

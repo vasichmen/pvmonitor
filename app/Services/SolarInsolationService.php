@@ -3,8 +3,12 @@
 
 namespace App\Services;
 
+use App\Contracts\Repositories\SolarInsolationRepositoryContract;
+use App\Contracts\Services\CoordinateServiceContract;
 use App\Contracts\Services\SolarInsolationServiceContract;
+use App\Enums\SolarParamTypeEnum;
 use App\Models\SolarInsolation;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,21 +22,73 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
 
     public function getHeatmap(array $params)
     {
-        $point = [
-            'x' => 100,
-            'y' => 100,
-            'value' => 50,
-        ];
-        $data = [
-            $point,
-            $point,
-        ];
+        $insolationParams = $this->getInsolationParams($params);
+        $items = app(SolarInsolationRepositoryContract::class)->getForHeatmap($params['bounds']['min'], $params['bounds']['max'], $params['limit'], $insolationParams);
+
+        $data = $items->map(function ($item) use ($params, $insolationParams) {
+            $value = $this->getValueFromItem($item, $insolationParams);
+            $coordinates = app(CoordinateServiceContract::class)->getLocalPixelCoordinates($item->lat, $item->lon, $params);
+            return [
+                ...$coordinates,
+                'value' => $value,
+            ];
+        });
+
+        $heatmapDiapason = $this->getHeatmapDiapason($items, $insolationParams);
 
         return [
-            'max' => 20,
-            'min' => 0,
+            ...$heatmapDiapason,
             'data' => $data,
         ];
+    }
+
+    /**получение списка параметров в БД по запросу с фронта
+     * @param  array  $params
+     * @return array
+     */
+    private function getInsolationParams(array $params): array
+    {
+        $fields[] = $params[SolarParamTypeEnum::Full->value] ? SolarParamTypeEnum::Full->value : null;
+        $fields[] = $params[SolarParamTypeEnum::Direct->value] ? SolarParamTypeEnum::Direct->value : null;
+        $fields[] = $params[SolarParamTypeEnum::Diffuse->value] ? SolarParamTypeEnum::Diffuse->value : null;
+        return collect($fields)->filter()->values()->toArray();
+    }
+
+    /**Получение динамического диапазона для тепловой карты. Поиск максимального и минимального значения в кВт/м2 в выборке
+     * @param  Collection  $items
+     * @param  array       $solarParams
+     * @return array
+     */
+    private function getHeatmapDiapason(Collection $items, array $solarParams): array
+    {
+        $powers = $items->map(function ($item) use ($solarParams) {
+            return $this->getValueFromItem($item, $solarParams);
+        });
+        return
+            [
+                'min' => $powers->min(),
+                'max' => $powers->max(),
+            ];
+    }
+
+    /**получение значения из записи в БД для вывода на тепловую карту, кВт/м2
+     * @param  SolarInsolation  $item
+     * @param  array            $solarParams
+     * @return float|int
+     */
+    private function getValueFromItem(SolarInsolation $item, array $solarParams): float|int
+    {
+        if (in_array(SolarParamTypeEnum::Full->value, $solarParams)) {
+            return +$item->full;
+        }
+        $result = 0;
+        if (in_array(SolarParamTypeEnum::Diffuse->value, $solarParams)) {
+            $result += +$item->diffuse;
+        }
+        if (in_array(SolarParamTypeEnum::Direct->value, $solarParams)) {
+            $result += +$item->direct;
+        }
+        return $result;
     }
 
     public function importFile(string $filePath, ?callable $notify = null)

@@ -13,10 +13,9 @@ class ApiController extends Controller
     public function heatmap(Request $request)
     {
         $params = [
-            'latitude' => floatval($request->get('latitude')),
-            'longitude' => floatval($request->get('longitude')),
-            'pixLatitude' => intval($request->get('pixLatitude')),
-            'pixLongitude' => intval($request->get('pixLongitude')),
+            'height' => intval($request->get('height')),
+            'width' => intval($request->get('width')),
+            'limit' => intval($request->get('limit')),
             'bounds' => json_decode($request->get('bounds'), true),
             'full' => $request->get('full') === 'true',
             'diffuse' => $request->get('diffuse') === 'true',

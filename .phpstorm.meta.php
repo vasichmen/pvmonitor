@@ -5,43 +5,12 @@ namespace PHPSTORM_META
 {
 
     override(\app(0), map([
-        '\App\Contracts\Repositories\TagRepositoryContract' => '\App\Repositories\TagRepository',
-        '\App\Contracts\Repositories\UserRepositoryContract' => '\App\Repositories\UserRepository',
-        '\App\Contracts\Repositories\UserActivityRepositoryContract' => '\App\Repositories\UserActivityRepository',
-        '\App\Contracts\Repositories\SubscriptionRepositoryContract' => '\App\Repositories\SubscriptionRepository',
-        '\App\Contracts\Repositories\SpaceStatusRepositoryContract' => '\App\Repositories\SpaceStatusRepository',
-        '\App\Contracts\Repositories\SpaceRoleRepositoryContract' => '\App\Repositories\SpaceRoleRepository',
-        '\App\Contracts\Repositories\SpaceRepositoryContract' => '\App\Repositories\SpaceRepository',
-        '\App\Contracts\Repositories\SpaceActivityRepositoryContract' => '\App\Repositories\SpaceActivityRepository',
-        '\App\Contracts\Repositories\SkillRepositoryContract' => '\App\Repositories\SkillRepository',
-        '\App\Contracts\Repositories\SkillConfirmationRepositoryContract' => '\App\Repositories\SkillConfirmationRepository',
-        '\App\Contracts\Repositories\SettingRepositoryContract' => '\App\Repositories\SettingRepository',
-        '\App\Contracts\Repositories\SearchRepositoryContract' => '\App\Repositories\SearchRepository',
-        '\App\Contracts\Repositories\RoleRepositoryContract' => '\App\Repositories\RoleRepository',
-        '\App\Contracts\Repositories\PermissionRepositoryContract' => '\App\Repositories\PermissionRepository',
-        '\App\Contracts\Repositories\NotificationRepositoryContract' => '\App\Repositories\NotificationRepository',
-        '\App\Contracts\Repositories\MaterialTypeRepositoryContract' => '\App\Repositories\MaterialTypeRepository',
-        '\App\Contracts\Repositories\MaterialStatusRepositoryContract' => '\App\Repositories\MaterialStatusRepository',
-        '\App\Contracts\Repositories\MaterialRepositoryContract' => '\App\Repositories\MaterialRepository',
-        '\App\Contracts\Repositories\MaterialActivityRepositoryContract' => '\App\Repositories\MaterialActivityRepository',
-        '\App\Contracts\Repositories\LikeRepositoryContract' => '\App\Repositories\LikeRepository',
-        '\App\Contracts\Repositories\GroupAccessTypeRepositoryContract' => '\App\Repositories\GroupAccessTypeRepository',
-        '\App\Contracts\Repositories\FileRepositoryContract' => '\App\Repositories\FileRepository',
-        '\App\Contracts\Repositories\FeedRepositoryContract' => '\App\Repositories\FeedRepository',
-        '\App\Contracts\Repositories\DepartmentRepositoryContract' => '\App\Repositories\DepartmentRepository',
-        '\App\Contracts\Repositories\CommentRepositoryContract' => '\App\Repositories\CommentRepository',
-        '\App\Contracts\Repositories\CategoryRepositoryContract' => '\App\Repositories\CategoryRepository',
-        '\App\Contracts\Repositories\BookmarkTypeRepositoryContract' => '\App\Repositories\BookmarkTypeRepository',
-        '\App\Contracts\Repositories\BookmarkRepositoryContract' => '\App\Repositories\BookmarkRepository',
-        '\App\Contracts\Repositories\AdminActionRepositoryContract' => '\App\Repositories\AdminActionRepository',
-        '\App\Contracts\Repositories\AccessRightRepositoryContract' => '\App\Repositories\AccessRightRepository',
-        '\App\Contracts\Repositories\AccessClassRepositoryContract' => '\App\Repositories\SolarInsolationRepository',
+        '\App\Contracts\Repositories\SolarInsolationRepositoryContract' => '\App\Repositories\SolarInsolationRepository',
 
 
-        '\App\Contracts\Services\SettingServiceContract' => '\App\Services\SolarInsolationService',
-        '\App\Contracts\Services\FileServiceContract' => '\App\Services\FileService',
+        '\App\Contracts\Services\SolarInsolationServiceContract' => '\App\Services\SolarInsolationService',
+        '\App\Contracts\Services\CoordinateServiceContract' => '\App\Services\CoordinateService',
 
-        '\App\Contracts\Elastic\MaterialIndexContract' => '\App\Elastic\Indexes\MaterialIndex',
     ]));
 
     /**
