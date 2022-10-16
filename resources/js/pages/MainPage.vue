@@ -78,6 +78,7 @@
               marker-type="placemark"
               marker-id="cursor-marker"
               :coords="cursorMarkerCoords"
+              @click="onCursorMarkerClick"
             />
           </yandex-map>
         </div>
@@ -249,6 +250,11 @@
         this.cursorMarkerCoords = coords;
         this.latitude = coords[0];
         this.longitude = coords[1];
+      },
+      onCursorMarkerClick(){
+        this.cursorMarkerCoords = null;
+        this.latitude = '';
+        this.longitude = '';
       },
 
       fillHeatmapParams(bounds) {
