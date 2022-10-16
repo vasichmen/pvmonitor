@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Services\PVGisServiceContract;
 use App\Contracts\Services\SolarInsolationServiceContract;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -23,5 +24,10 @@ class ApiController extends Controller
         ];
 
         return new JsonResponse(app(SolarInsolationServiceContract::class)->getHeatmap($params),);
+    }
+
+    public function exportPvgisData(Request $request)
+    {
+        return app(PVGisServiceContract::class)->exportPvgisData($request->get('lat'), $request->get('lon'));
     }
 }

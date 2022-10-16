@@ -10,15 +10,15 @@
         </div>
         <div class="main-page__panel-inputs">
           <el-input
-            v-model="heatmapParams.latitude"
+            v-model="latitude"
             class="main-page__panel-inputs-item"
-            :value="heatmapParams.latitude"
+            :value="latitude"
             placeholder="Широта. Например, 41.39956"
           />
           <el-input
-            v-model="heatmapParams.longitude"
+            v-model="longitude"
             class="main-page__panel-inputs-item"
-            :value="heatmapParams.longitude"
+            :value="longitude"
             placeholder="Долгота. Например, 75.39956"
           />
         </div>
@@ -50,6 +50,7 @@
         </div>
       </div>
       <div
+        v-loading="heatmapLoading"
         class="map__container"
       >
         <div
@@ -67,16 +68,26 @@
           >
             <ymap-marker
               :coords="countryPolygonCoordinates"
-              :marker-type="'polygon'"
+              marker-type="polygon"
               marker-id="country-polygon"
               :marker-fill="{color:'#eab925', opacity:0.5}"
+              @click="onPolygonClick"
+            />
+            <ymap-marker
+              v-if="cursorMarkerCoords"
+              marker-type="placemark"
+              marker-id="cursor-marker"
+              :coords="cursorMarkerCoords"
             />
           </yandex-map>
         </div>
       </div>
       <div class="main-page__export-panel">
         <el-button
+          v-loading="exportDataLoading"
           type="success"
+          :disabled="exportDataButtonDisabled"
+          :title="exportDataButtonTitle"
           @click="exportData"
         >
           Экспортировать данные
@@ -89,6 +100,7 @@
 <script>
   import initHeatmap from '@/heatmap.js';
   import axios from 'axios';
+  import fileDownload from 'js-file-download';
   import { loadYmap, yandexMap, ymapMarker } from 'vue-yandex-maps';
 
 
@@ -122,9 +134,9 @@
         version: '2.1',
       },
 
+      latitude: '',
+      longitude: '',
       heatmapParams: {
-        latitude: '',
-        longitude: '',
         height: '',
         width: '',
         full: false,
@@ -142,6 +154,9 @@
       heatmap: null,
       rendering: false,
       zoom: 8,
+      cursorMarkerCoords: null,
+      exportDataLoading: false,
+      heatmapLoading: false,
     }
     ),
     computed: {
@@ -158,6 +173,12 @@
       },
       heatmapPointsLimit() {
         return 5000;
+      },
+      exportDataButtonDisabled() {
+        return !this.latitude || !this.longitude;
+      },
+      exportDataButtonTitle() {
+        return this.exportDataButtonDisabled ? 'Для экспорта данных выберите точку на карте' : 'Выгрзука данных по солнечной радиации в выбранной точке';
       },
       /**
        * коэффициенты подобраны вручную для лучшей визуализации
@@ -181,7 +202,8 @@
             return 40;
           case 13:
             return 80;
-          default: throw Error('Этот масшаб не реализован');
+          default:
+            throw Error('Этот масшаб не реализован');
         }
       },
     },
@@ -201,27 +223,42 @@
           this.renderHeatmap();
         },
       },
+      latitude(lat) {
+        this.cursorMarkerCoords = [lat, this.longitude];
+      },
+      longitude(lon) {
+        this.cursorMarkerCoords = [this.latitude, lon];
+      },
     },
     async mounted() {
       await loadYmap({ ...this.settings, debug: true });
       this.canInteractive = true;
 
-      this.fillHeatmapParams(this.mapInitCoordinates[0], this.mapInitCoordinates[1], this.$refs.map.bounds);
+      this.fillHeatmapParams(this.$refs.map.bounds);
 
       this.heatmapTarget = document.getElementById('map');
       this.heatmapFactory = initHeatmap();
     },
     methods: {
       onBoundsChange(event) {
+        //костыль, чтоб карта успела изменить масштаб, а потом уже запускать рендер тепловой карты
         setTimeout(() => {
-          const coords = event.get('newCenter');
-          this.fillHeatmapParams(coords[0], coords[1], event.get('newBounds'));
+          this.fillHeatmapParams(event.get('newBounds'));
           this.renderHeatmap();
         }, 100);
       },
-      fillHeatmapParams(lat, lon, bounds) {
-        this.heatmapParams.latitude = lat;
-        this.heatmapParams.longitude = lon;
+      /**
+       * установка маркеры выбранных координат
+       * @param event
+       */
+      onPolygonClick(event) {
+        const coords = event.get('coords');
+        this.cursorMarkerCoords = coords;
+        this.latitude = coords[0];
+        this.longitude = coords[1];
+      },
+
+      fillHeatmapParams(bounds) {
         this.heatmapParams.height = this.$refs.map.$el.clientHeight;
         this.heatmapParams.width = this.$refs.map.$el.clientWidth;
         this.heatmapParams.bounds = {
@@ -235,8 +272,27 @@
           },
         };
       },
-      exportData() {
-        //todo
+      /**
+       * экспорт данных из PV Gis и загрузка результирующего файла
+       */
+      async exportData() {
+        const fileName = `pv-output-${this.latitude}-${this.longitude}.csv`;
+        this.exportDataLoading = true;
+        try {
+          const response = await axios.get('/api/v1/data-export/pvgis', {
+            params: {
+              lat: this.latitude,
+              lon: this.longitude,
+            },
+          });
+          fileDownload(response.data, fileName);
+        }
+        catch (e) {
+          this.$message({ type: 'error', message: 'Произошла ошибка при загрузке данных' });
+        }
+        finally {
+          this.exportDataLoading = false;
+        }
       },
 
       /**
@@ -247,8 +303,9 @@
         //если уже была создана тепловая карта, то удаляем
         if (this.heatmap) {
           const tag = document.getElementById('heatmap-canvas');
-          if (tag)
+          if (tag) {
             tag.remove();
+          }
         }
 
         if (!this.canShowHeatmap) {
@@ -256,32 +313,38 @@
         }
 
         //прерываем предыдкщий запрос
-        if (this.rendering) {
+        if (this.heatmapLoading) {
           this.abortHeatmapRequestController.abort();
         }
 
-        this.rendering = true;
+        try {
+          this.heatmapLoading = true;
 
-        console.log(this.$refs.map.zoom);
+          this.heatmap = this.heatmapFactory.create({
+            container: this.heatmapTarget,
+            radius: this.heatmapPointRadius,
+            maxOpacity: .2,
+            minOpacity: 0,
+            blur: 0.9,
+            defaultGradient: { 0.25: 'rgb(0,0,255)', 0.55: 'rgb(0,255,0)', 0.85: 'yellow', 1.0: 'rgb(255,0,0)' },
+          });
 
-        this.heatmap = this.heatmapFactory.create({
-          container: this.heatmapTarget,
-          radius: this.heatmapPointRadius,
-          maxOpacity: .2,
-          minOpacity: 0,
-          blur: 0.9,
-        });
-
-
-        this.abortHeatmapRequestController = new AbortController();
-        let response = await axios.get('/api/v1/solar-insolation/heatmap', {
-          params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
-          signal: this.abortHeatmapRequestController.signal,
-        });
-
-        this.heatmap.setData(response.data);
-
-        this.rendering = false;
+          this.abortHeatmapRequestController = new AbortController();
+          let response = await axios.get('/api/v1/solar-insolation/heatmap', {
+            params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
+            signal: this.abortHeatmapRequestController.signal,
+          });
+          this.heatmap.setData(response.data);
+          this.heatmapLoading = false;
+        }
+        catch (e) {
+          if (e.code !== 'ERR_CANCELED') {
+            this.$message({ type: 'error', message: 'Произошла ошибка при загрузке данных' });
+          }
+        }
+        finally {
+          this.heatmapLoading = false;
+        }
       },
     },
   };

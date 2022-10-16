@@ -1,5 +1,5 @@
 <?php
-// @formatter:off
+
 
 namespace PHPSTORM_META
 {
@@ -10,7 +10,8 @@ namespace PHPSTORM_META
 
         '\App\Contracts\Services\SolarInsolationServiceContract' => '\App\Services\SolarInsolationService',
         '\App\Contracts\Services\CoordinateServiceContract' => '\App\Services\CoordinateService',
-
+        '\App\Contracts\Services\PVGisServiceContract' => '\App\Services\PVGisService',
+        ,
     ]));
 
     /**

@@ -18,6 +18,7 @@ Route::group([
 ],
     function () {
         require_once 'api/solar_insolation.php';
+        require_once 'api/data_export.php';
     }
 );
 

@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
     private array $serviceList = [
         'SolarInsolation',
         'Coordinate',
+        'PVGis',
     ];
 
 
