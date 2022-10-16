@@ -11,14 +11,10 @@ class WebController extends Controller
 {
     public function mainPage()
     {
-        $mapInitCoordinates = [41, 75];
-        $mapInitZoom = 6;
         $countryPolygonCoordinates = app(CoordinateServiceContract::class)->getCountryPolygonCoordinates();
         $mapBounds = app(CoordinateServiceContract::class)->getCountryBounds();
         return Inertia::render('MainPage', compact(
-            'mapInitCoordinates',
             'countryPolygonCoordinates',
-            'mapInitZoom',
             'mapBounds',
         ));
     }

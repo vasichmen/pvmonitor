@@ -60,7 +60,7 @@
           <yandex-map
             ref="map"
             class="ymap__area"
-            :coords="mapInitCoordinates"
+            :coords="mapCoords"
             :zoom.sync="zoom"
             :bounds="mapBounds"
             :controls="['zoomControl','typeSelector']"
@@ -112,14 +112,6 @@
         type: Array,
         required: true,
       },
-      mapInitCoordinates: {
-        type: Array,
-        required: true,
-      },
-      mapInitZoom: {
-        type: Number,
-        required: true,
-      },
       mapBounds: {
         type: Array,
         required: true,
@@ -157,6 +149,7 @@
       cursorMarkerCoords: null,
       exportDataLoading: false,
       heatmapLoading: false,
+      mapCoords:[41,75],
     }
     ),
     computed: {
@@ -168,7 +161,7 @@
         return this.canInteractive
           && (this.heatmapParams.full || this.heatmapParams.direct || this.heatmapParams.diffuse
           )
-          && (this.zoom > 6 && this.zoom < 14
+          && (this.zoom > 5 && this.zoom < 14
           );
       },
       heatmapPointsLimit() {
@@ -187,7 +180,7 @@
       heatmapPointRadius() {
         switch (this.zoom) {
           case 6:
-            return 3;
+            return 4;
           case 7:
             return 6;
           case 8:

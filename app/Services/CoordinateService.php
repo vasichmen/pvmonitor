@@ -20,8 +20,8 @@ class CoordinateService extends AbstractService implements CoordinateServiceCont
         $lats = collect(self::COUNTRY_POLYGON_COORDINATES)->pluck(0);
         $lons = collect(self::COUNTRY_POLYGON_COORDINATES)->pluck(1);
         return [
-            [$lats->max(), $lons->min()],
-            [$lats->min(), $lons->max()],
+            [$lats->min(), $lons->min()],
+            [$lats->max(), $lons->max()],
         ];
     }
 
