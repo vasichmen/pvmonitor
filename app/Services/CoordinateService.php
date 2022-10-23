@@ -4,21 +4,27 @@
 namespace App\Services;
 
 use App\Contracts\Services\CoordinateServiceContract;
+use Illuminate\Support\Collection;
 
 class CoordinateService extends AbstractService implements CoordinateServiceContract
 {
     public function getCountryPolygonCoordinates(): array
     {
         return [
-            self::COUNTRY_POLYGON_COORDINATES,
+            $this->prepareCountryCoordinates(),
             [],
         ];
     }
 
+    private function prepareCountryCoordinates(): Collection
+    {
+        return collect(self::COUNTRY_POLYGON_COORDINATES)->map(fn($item) => [$item[1], $item[0]]);
+    }
+
     public function getCountryBounds(): array
     {
-        $lats = collect(self::COUNTRY_POLYGON_COORDINATES)->pluck(0);
-        $lons = collect(self::COUNTRY_POLYGON_COORDINATES)->pluck(1);
+        $lats = $this->prepareCountryCoordinates()->pluck(0);
+        $lons = $this->prepareCountryCoordinates()->pluck(1);
         return [
             [$lats->min(), $lons->min()],
             [$lats->max(), $lons->max()],
