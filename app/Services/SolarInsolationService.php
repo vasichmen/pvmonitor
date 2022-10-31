@@ -9,7 +9,6 @@ use App\Contracts\Services\SolarInsolationServiceContract;
 use App\Enums\SolarParamTypeEnum;
 use App\Models\SolarInsolation;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SolarInsolationService extends AbstractService implements SolarInsolationServiceContract
@@ -17,8 +16,11 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
 
     const LATITUDE_FIELD = 'lat';
     const LONGITUDE_FIELD = 'lon';
-    const TOTAL_FIELD = 'total';
-    const DIRECT_FIELD = 'direct';
+    const TOTAL_FIELD = 'ghi';
+    const DIRECT_FIELD = 'dni';
+    const DIFFUSE_FIELD = 'dif';
+    const TOTAL_OPTIMAL_FIELD = 'gti';
+    const ALTITUDE_FIELD = 'alt';
 
     public function getHeatmap(array $params)
     {
@@ -114,14 +116,29 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
             }
             $totalKey = array_flip($headers)[self::TOTAL_FIELD];
 
+            if (!isset(array_flip($headers)[self::TOTAL_OPTIMAL_FIELD])) {
+                throw new \Exception('Не найдено поле ' . self::TOTAL_OPTIMAL_FIELD);
+            }
+            $totalOptimalKey = array_flip($headers)[self::TOTAL_OPTIMAL_FIELD];
+
             if (!isset(array_flip($headers)[self::DIRECT_FIELD])) {
                 throw new \Exception('Не найдено поле ' . self::DIRECT_FIELD);
             }
             $directKey = array_flip($headers)[self::DIRECT_FIELD];
 
+            if (!isset(array_flip($headers)[self::DIFFUSE_FIELD])) {
+                throw new \Exception('Не найдено поле ' . self::DIFFUSE_FIELD);
+            }
+            $diffuseKey = array_flip($headers)[self::DIFFUSE_FIELD];
+
+            if (!isset(array_flip($headers)[self::ALTITUDE_FIELD])) {
+                throw new \Exception('Не найдено поле ' . self::ALTITUDE_FIELD);
+            }
+            $altitudeKey = array_flip($headers)[self::ALTITUDE_FIELD];
+
             //обработка файла
             $row = 1;
-            DB::beginTransaction();
+            $upsertArray = [];
             while ($values = fgetcsv($resource)) {
                 $row++;
 
@@ -129,33 +146,35 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
                     $notify('Обрабатывается ряд ' . $row);
                 }
 
-                if ($row % 100 === 0) {
-                    DB::commit();
-                    DB::beginTransaction();
+                if (count($upsertArray) === 100) {
+                    SolarInsolation::upsert($upsertArray, ['lat', 'lon']);
+                    $upsertArray = [];
                 }
 
                 $latitude = doubleval($values[$latitudeKey]);
                 $longitude = doubleval($values[$longitudeKey]);
                 $total = doubleval($values[$totalKey] ?? -1);
-                $direct = doubleval($values[$directKey] ?? rand(100, 800));
+                $totalOptimal = doubleval($values[$totalOptimalKey] ?? -1);
+                $direct = doubleval($values[$directKey] ?? -1);
+                $diffuse = doubleval($values[$diffuseKey] ?? -1);
+                $altitude = doubleval($values[$altitudeKey] ?? -1);
 
-                if ($total < 0 || $direct < 0) {
+                if ($total < 0 || $direct < 0 || $totalOptimal < 0 || $diffuse < 0) {
                     continue;
                 }
 
-                SolarInsolation::updateOrCreate(
-                    [
-                        'lat' => $latitude,
-                        'lon' => $longitude,
-                    ],
-                    [
-                        'full' => $total,
-                        'direct' => $direct,
-                        'diffuse' => $total - $direct,
-                    ]);
+                $upsertArray[] = [
+                    'lat' => $latitude,
+                    'lon' => $longitude,
+                    'full' => $total,
+                    'full_optimal' => $totalOptimal,
+                    'direct' => $direct,
+                    'diffuse' => $diffuse,
+                    'altitude' => $altitude,
+                ];
             }
 
-            DB::commit();
+            SolarInsolation::upsert($upsertArray, ['lat', 'lon']);
         }
         catch (\Exception $e) {
             dd($e);

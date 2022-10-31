@@ -11,5 +11,9 @@ class SolarInsolation extends AbstractModel
         'full',
         'direct',
         'diffuse',
+        'altitude',
+        'full_optimal',
     ];
+
+    protected $primaryKey = ['lat', 'lon'];
 }

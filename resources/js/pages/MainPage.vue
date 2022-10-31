@@ -8,16 +8,16 @@
         <div class="main-page__panel-header">
           Координаты местности
         </div>
-        <div class="main-page__panel-inputs">
+        <div class="main-page__panel-inputs main-page__panel-inputs--margined">
           <el-input
             v-model="latitude"
-            class="main-page__panel-inputs-item"
+            class="main-page__panel-inputs-item main-page__panel-inputs-item--margined"
             :value="latitude"
             placeholder="Широта. Например, 41.39956"
           />
           <el-input
             v-model="longitude"
-            class="main-page__panel-inputs-item"
+            class="main-page__panel-inputs-item main-page__panel-inputs-item--margined"
             :value="longitude"
             placeholder="Долгота. Например, 75.39956"
           />
@@ -32,6 +32,13 @@
             :value="heatmapParams.full"
           >
             Суммарная гориз. СР
+          </el-checkbox>
+          <el-checkbox
+            v-model="heatmapParams.full_optimal"
+            class="main-page__panel-inputs-item"
+            :value="heatmapParams.full_optimal"
+          >
+            Суммарная СР на оптимально ориентированной поверхности
           </el-checkbox>
           <el-checkbox
             v-model="heatmapParams.diffuse"
@@ -133,6 +140,7 @@
         height: '',
         width: '',
         full: false,
+        full_optimal: false,
         diffuse: false,
         direct: false,
         bounds: {
@@ -150,7 +158,7 @@
       cursorMarkerCoords: null,
       exportDataLoading: false,
       heatmapLoading: false,
-      mapCoords:[41,75],
+      mapCoords: [41, 75],
     }
     ),
     computed: {
@@ -160,7 +168,7 @@
        */
       canShowHeatmap() {
         return this.canInteractive
-          && (this.heatmapParams.full || this.heatmapParams.direct || this.heatmapParams.diffuse
+          && (this.heatmapParams.full || this.heatmapParams.direct || this.heatmapParams.diffuse || this.heatmapParams.full_optimal
           )
           && (this.zoom > 5 && this.zoom < 14
           );
@@ -197,12 +205,17 @@
           case 13:
             return 80;
           default:
-            throw Error('Этот масшаб не реализован');
+            throw Error('Этот масштаб не реализован');
         }
       },
     },
     watch: {
       ['heatmapParams.full']: {
+        handler() {
+          this.renderHeatmap();
+        },
+      },
+      ['heatmapParams.full_optimal']: {
         handler() {
           this.renderHeatmap();
         },
@@ -251,7 +264,7 @@
         this.latitude = coords[0];
         this.longitude = coords[1];
       },
-      onCursorMarkerClick(){
+      onCursorMarkerClick() {
         this.cursorMarkerCoords = null;
         this.latitude = '';
         this.longitude = '';
@@ -325,7 +338,12 @@
             maxOpacity: .2,
             minOpacity: 0,
             blur: 0.9,
-            defaultGradient: { 0.25: 'rgb(0,0,255)', 0.55: 'rgb(0,255,0)', 0.85: 'yellow', 1.0: 'rgb(255,0,0)' },
+            defaultGradient: {
+              0.25: 'rgb(0,0,255)',
+              0.55: 'rgb(0,255,0)',
+              0.85: 'yellow',
+              1.0: 'rgb(255,0,0)',
+            },
           });
 
           this.abortHeatmapRequestController = new AbortController();
@@ -350,64 +368,80 @@
 </script>
 
 <style scoped lang="scss">
-  .main-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    &__container {
-      width: 790px;
-      padding: 20px;
-    }
-
-    &__header {
-      font-size: 30px;
-      margin-bottom: 20px;
-    }
-
-    &__panel {
-
-      &-header {
+    .main-page {
         display: flex;
         flex-direction: column;
         align-items: center;
 
-        font-size: 15px;
-      }
-
-      &-inputs {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-
-        margin-top: 20px;
-        margin-bottom: 20px;
-
-        &-item {
-          margin-left: 20px;
-
-          &:first-child {
-            margin-left: 0;
-          }
+        &__container {
+            width: 790px;
+            padding: 20px;
         }
-      }
+
+        &__header {
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        &__panel {
+
+            &-header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                font-size: 15px;
+            }
+
+            &-inputs {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+
+                margin-top: 20px;
+                margin-bottom: 20px;
+
+                &-item {
+                    //margin-left: 20px;
+                    margin-right: 0;
+                    width: 50%;
+
+                    //&:first-child {
+                    //    margin-left: 0;
+                    //}
+                    &--margined {
+                        margin-left: 20px;
+
+                        &:first-child {
+                            margin-left: 0;
+                        }
+                    }
+                }
+
+                &--margined {
+                    flex-wrap: nowrap;
+                }
+
+
+            }
+        }
+
+        &__export-panel {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+
+            margin-top: 20px;
+        }
     }
 
-    &__export-panel {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
+    .ymap {
 
-      margin-top: 20px;
+        &__area {
+            height: 500px;
+            width: 750px;
+        }
     }
-  }
-
-  .ymap {
-
-    &__area {
-      height: 500px;
-      width: 750px;
-    }
-  }
 </style>
