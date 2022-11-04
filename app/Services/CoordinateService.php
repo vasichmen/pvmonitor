@@ -4,6 +4,7 @@
 namespace App\Services;
 
 use App\Contracts\Services\CoordinateServiceContract;
+use App\Models\SolarInsolation;
 use Illuminate\Support\Collection;
 
 class CoordinateService extends AbstractService implements CoordinateServiceContract
@@ -70,5 +71,27 @@ class CoordinateService extends AbstractService implements CoordinateServiceCont
             'x' => intval(round($x)), //расстояние по горизонтали от верхнего левого угла по OX
             'y' => intval(round($y)), //расстояние по горизонтали от верхнего левого угла по OY
         ];
+    }
+
+    /**Поиск ближайшей точки из списка к заданным координатам
+     * @param  Collection  $points
+     * @param  float       $lat
+     * @param  float       $lon
+     * @return SolarInsolation|null
+     */
+    public function getNearestPoint(Collection $points, float $lat, float $lon): ?SolarInsolation
+    {
+        $minLength = PHP_FLOAT_MAX;
+        $minPoint = null;
+        foreach ($points as $point) {
+            //считаем по теореме Пифагора расстояние в градусах между точками, на небольших расстояниях ошибка незначительна.
+            //для больших расстояний лучше использовать формулу гаверсинусов https://gis-lab.info/qa/great-circles.html
+            $length = sqrt(pow($point->lat - $lat, 2) + pow($point->lon - $lon, 2));
+            if ($length < $minLength) {
+                $minLength = $length;
+                $minPoint = $point;
+            }
+        }
+        return $minPoint;
     }
 }

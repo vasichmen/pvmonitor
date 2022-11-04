@@ -3,7 +3,7 @@
 
 namespace App\Contracts\Services;
 
-interface SolarInsolationServiceContract
+interface MapDataServiceContract
 {
 
 }

@@ -5,13 +5,13 @@ namespace App\Services;
 
 use App\Contracts\Repositories\SolarInsolationRepositoryContract;
 use App\Contracts\Services\CoordinateServiceContract;
-use App\Contracts\Services\SolarInsolationServiceContract;
+use App\Contracts\Services\MapDataServiceContract;
 use App\Enums\SolarParamTypeEnum;
 use App\Models\SolarInsolation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
-class SolarInsolationService extends AbstractService implements SolarInsolationServiceContract
+class MapDataService extends AbstractService implements MapDataServiceContract
 {
 
     const LATITUDE_FIELD = 'lat';
@@ -21,6 +21,15 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
     const DIFFUSE_FIELD = 'dif';
     const TOTAL_OPTIMAL_FIELD = 'gti';
     const ALTITUDE_FIELD = 'alt';
+    const IMPORT_FILE_FIELDS = [
+        self::LATITUDE_FIELD,
+        self::LONGITUDE_FIELD,
+        self::TOTAL_FIELD,
+        self::TOTAL_OPTIMAL_FIELD,
+        self::DIRECT_FIELD,
+        self::DIFFUSE_FIELD,
+        self::ALTITUDE_FIELD,
+    ];
 
     public function getHeatmap(array $params)
     {
@@ -93,6 +102,26 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
         return $result;
     }
 
+
+    /**Возвращает высоту над у.м.
+     * @param  float  $lat
+     * @param  float  $lon
+     * @return void
+     */
+    public function getElevation(float $lat, float $lon)
+    {
+        $latFrom = round($lat, 2) - 0.02;
+        $latTo = round($lat, 2) + 0.02;
+        $lonFrom = round($lon, 2) - 0.02;
+        $lonTo = round($lon, 2) + 0.02;
+
+        $data = app(SolarInsolationRepositoryContract::class)->getDiapasonForElevation($latFrom, $latTo, $lonFrom, $lonTo);
+
+        $nearest = app(CoordinateServiceContract::class)->getNearestPoint($data, $lat, $lon);
+
+        return $nearest?->altitude;
+    }
+
     public function importFile(string $filePath, ?callable $notify = null)
     {
         try {
@@ -100,41 +129,21 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
             $resource = Storage::readStream($filePath);
             $headers = fgetcsv($resource);
 
-            if (!isset(array_flip($headers)[self::LATITUDE_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::LATITUDE_FIELD);
+            //проверка полей в файле
+            $headerKeys = array_flip($headers);
+            foreach (self::IMPORT_FILE_FIELDS as $field){
+                if (!isset($headerKeys[$field])) {
+                    throw new \Exception('Не найдено поле ' . $field);
+                }
             }
-            $latitudeKey = array_flip($headers)[self::LATITUDE_FIELD];
 
-
-            if (!isset(array_flip($headers)[self::LONGITUDE_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::LONGITUDE_FIELD);
-            }
-            $longitudeKey = array_flip($headers)[self::LONGITUDE_FIELD];
-
-            if (!isset(array_flip($headers)[self::TOTAL_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::TOTAL_FIELD);
-            }
-            $totalKey = array_flip($headers)[self::TOTAL_FIELD];
-
-            if (!isset(array_flip($headers)[self::TOTAL_OPTIMAL_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::TOTAL_OPTIMAL_FIELD);
-            }
-            $totalOptimalKey = array_flip($headers)[self::TOTAL_OPTIMAL_FIELD];
-
-            if (!isset(array_flip($headers)[self::DIRECT_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::DIRECT_FIELD);
-            }
-            $directKey = array_flip($headers)[self::DIRECT_FIELD];
-
-            if (!isset(array_flip($headers)[self::DIFFUSE_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::DIFFUSE_FIELD);
-            }
-            $diffuseKey = array_flip($headers)[self::DIFFUSE_FIELD];
-
-            if (!isset(array_flip($headers)[self::ALTITUDE_FIELD])) {
-                throw new \Exception('Не найдено поле ' . self::ALTITUDE_FIELD);
-            }
-            $altitudeKey = array_flip($headers)[self::ALTITUDE_FIELD];
+            $latitudeKey = $headerKeys[self::LATITUDE_FIELD];
+            $longitudeKey = $headerKeys[self::LONGITUDE_FIELD];
+            $totalKey = $headerKeys[self::TOTAL_FIELD];
+            $totalOptimalKey = $headerKeys[self::TOTAL_OPTIMAL_FIELD];
+            $directKey = $headerKeys[self::DIRECT_FIELD];
+            $diffuseKey = $headerKeys[self::DIFFUSE_FIELD];
+            $altitudeKey = $headerKeys[self::ALTITUDE_FIELD];
 
             //обработка файла
             $row = 1;
@@ -153,11 +162,11 @@ class SolarInsolationService extends AbstractService implements SolarInsolationS
 
                 $latitude = doubleval($values[$latitudeKey]);
                 $longitude = doubleval($values[$longitudeKey]);
-                $total = doubleval($values[$totalKey] ?? -1);
-                $totalOptimal = doubleval($values[$totalOptimalKey] ?? -1);
-                $direct = doubleval($values[$directKey] ?? -1);
-                $diffuse = doubleval($values[$diffuseKey] ?? -1);
-                $altitude = doubleval($values[$altitudeKey] ?? -1);
+                $total = doubleval($values[$totalKey] ?? -999);
+                $totalOptimal = doubleval($values[$totalOptimalKey] ?? -999);
+                $direct = doubleval($values[$directKey] ?? -999);
+                $diffuse = doubleval($values[$diffuseKey] ?? -999);
+                $altitude = doubleval($values[$altitudeKey] ?? -999);
 
                 if ($total < 0 || $direct < 0 || $totalOptimal < 0 || $diffuse < 0) {
                     continue;

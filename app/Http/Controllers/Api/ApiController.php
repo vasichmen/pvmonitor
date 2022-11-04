@@ -3,11 +3,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Services\MapDataServiceContract;
 use App\Contracts\Services\PVGisServiceContract;
-use App\Contracts\Services\SolarInsolationServiceContract;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ApiController extends Controller
 {
@@ -23,11 +24,16 @@ class ApiController extends Controller
             'direct' => $request->get('direct') === 'true',
         ];
 
-        return new JsonResponse(app(SolarInsolationServiceContract::class)->getHeatmap($params),);
+        return new JsonResponse(app(MapDataServiceContract::class)->getHeatmap($params),);
     }
 
-    public function exportPvgisData(Request $request)
+    public function exportPvgisData(Request $request): StreamedResponse
     {
         return app(PVGisServiceContract::class)->exportPvgisData($request->get('lat'), $request->get('lon'));
+    }
+
+    public function getElevation(Request $request): JsonResponse
+    {
+        return new JsonResponse(['elevation' => app(MapDataServiceContract::class)->getElevation($request->get('lat'), $request->get('lon'))]);
     }
 }

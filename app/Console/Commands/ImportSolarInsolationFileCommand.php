@@ -3,7 +3,7 @@
 
 namespace App\Console\Commands;
 
-use App\Contracts\Services\SolarInsolationServiceContract;
+use App\Contracts\Services\MapDataServiceContract;
 use Illuminate\Console\Command;
 
 class ImportSolarInsolationFileCommand extends Command
@@ -31,7 +31,7 @@ class ImportSolarInsolationFileCommand extends Command
     {
         $filepath = $this->option('file') ?? throw new \Exception("Файл не задан");
         $filepath = '/db_sources/' . $filepath;
-        app(SolarInsolationServiceContract::class)->importFile($filepath, function ($message) {
+        app(MapDataServiceContract::class)->importFile($filepath, function ($message) {
             $this->info($message);
         });
 

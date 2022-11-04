@@ -18,15 +18,14 @@ abstract class AbstractRepository
      * @param  array     $with      аналогичен Builder->with()
      * @param  array     $select    аналогичен Builder->select()
      * @param  array     $orderBy   аналогичен Builder->orderBy()
-     * @param  int|bool  $cacheFor  время кэширования или false, если не требуется кэширование. -1 для кэширования без
      *                              ограничения по времени. По умолчанию время берется из config('cache.ttl')
      * @param  int|null  $limit     число записей на странице
      * @param  int|null  $offset    номер страницы
      * @return Collection
      */
-    public function getList(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = [], int|bool $cacheFor = true, ?int $limit = null, ?int $offset = null): Collection
+    public function getList(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = [], ?int $limit = null, ?int $offset = null): Collection
     {
-        return $this->buildQuery($filters, $with, $select, $orderBy, $cacheFor, $limit, $offset)->get();
+        return $this->buildQuery($filters, $with, $select, $orderBy, $limit, $offset)->get();
     }
 
     /**Собирает запрос в БД по заданным условиям и возвращает перую найденную запись или null
@@ -34,13 +33,12 @@ abstract class AbstractRepository
      * @param  array     $with      аналогичен Builder->with()
      * @param  array     $select    аналогичен Builder->select()
      * @param  array     $orderBy   аналогичен Builder->orderBy()
-     * @param  int|bool  $cacheFor  время кэширования или false, если не требуется кэширование. -1 для кэширования без
      *                              ограничения по времени. По умолчанию время берется из config('cache.ttl')
      * @return AbstractModel|null
      */
-    public function find(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = [], int|bool $cacheFor = true): ?AbstractModel
+    public function find(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = []): ?AbstractModel
     {
-        return $this->buildQuery($filters, $with, $select, $orderBy, $cacheFor)->take(1)->get()->first();
+        return $this->buildQuery($filters, $with, $select, $orderBy)->take(1)->get()->first();
     }
 
     /**Собирает запрос в БД по заданным условиям
@@ -48,20 +46,14 @@ abstract class AbstractRepository
      * @param  array     $with      аналогичен Builder->with()
      * @param  array     $select    аналогичен Builder->select()
      * @param  array     $orderBy   аналогичен Builder->orderBy()
-     * @param  int|bool  $cacheFor  время кэширования или false, если не требуется кэширование. -1 для кэширования без
      *                              ограничения по времени. По умолчанию время берется из config('cache.ttl')
      * @param  int|null  $limit     число записей на странице
      * @param  int|null  $offset    номер страницы
      * @return Builder
      */
-    private function buildQuery(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = [], int|bool $cacheFor = true, ?int $limit = null, ?int $offset = null): Builder
+    private function buildQuery(array $filters = [], array $with = [], array $select = ['*'], array $orderBy = [], ?int $limit = null, ?int $offset = null): Builder
     {
         $query = $this->model;
-
-        if ($cacheFor !== false) {
-            $cacheFor = $cacheFor === true ? config('cache.ttl') : $cacheFor;
-            $query = $query->cacheFor($cacheFor);
-        }
 
         $query = $query->with($with)->select($select);
 

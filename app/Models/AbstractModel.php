@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 /**
  * @method static bool flushQueryCache(string[] $tags = [])
  * @method static bool flushQueryCacheWithTag(string $tag)
- * @method static Builder|static cacheFor(\DateTime|int $ttl)
  * @method static Builder|static cacheForever()
  * @method static Builder|static dontCache(bool $avoidCache = true)
  * @method static Builder|static doNotCache(bool $avoidCache = true)

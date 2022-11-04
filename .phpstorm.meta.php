@@ -8,7 +8,7 @@ namespace PHPSTORM_META
         '\App\Contracts\Repositories\SolarInsolationRepositoryContract' => '\App\Repositories\SolarInsolationRepository',
 
 
-        '\App\Contracts\Services\SolarInsolationServiceContract' => '\App\Services\SolarInsolationService',
+        '\App\Contracts\Services\MapDataServiceContract' => '\App\Services\MapDataService',
         '\App\Contracts\Services\CoordinateServiceContract' => '\App\Services\CoordinateService',
         '\App\Contracts\Services\PVGisServiceContract' => '\App\Services\PVGisService',
         ,

@@ -14,7 +14,7 @@ class PVGisService extends AbstractService implements PVGisServiceContract
     /**
      * Сколько секунда хранить временные файлы
      */
-    const TEMP_FILE_TTL = 24*60*60; //seconds
+    const TEMP_FILE_TTL = 24 * 60 * 60; //seconds
 
     /**Загрузка файла данных с pvgis
      * @param $lat

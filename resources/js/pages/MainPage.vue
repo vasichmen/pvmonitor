@@ -38,7 +38,7 @@
             class="main-page__panel-inputs-item"
             :value="heatmapParams.full_optimal"
           >
-            Суммарная СР на оптимально ориентированной поверхности
+            Суммарная СР для оптимального угла наклона
           </el-checkbox>
           <el-checkbox
             v-model="heatmapParams.diffuse"
@@ -84,6 +84,7 @@
               v-if="cursorMarkerCoords"
               marker-type="placemark"
               marker-id="cursor-marker"
+              :icon="cursorMarkerIcon"
               :coords="cursorMarkerCoords"
               @click="onCursorMarkerClick"
             />
@@ -156,6 +157,7 @@
       rendering: false,
       zoom: 8,
       cursorMarkerCoords: null,
+      cursorMarkerElevation: null,
       exportDataLoading: false,
       heatmapLoading: false,
       mapCoords: [41, 75],
@@ -180,7 +182,7 @@
         return !this.latitude || !this.longitude;
       },
       exportDataButtonTitle() {
-        return this.exportDataButtonDisabled ? 'Для экспорта данных выберите точку на карте' : 'Выгрзука данных по солнечной радиации в выбранной точке';
+        return this.exportDataButtonDisabled ? 'Для экспорта данных выберите точку на карте' : 'Экспорт данных по солнечной радиации в выбранной точке';
       },
       /**
        * коэффициенты подобраны вручную для лучшей визуализации
@@ -207,6 +209,16 @@
           default:
             throw Error('Этот масштаб не реализован');
         }
+      },
+      cursorMarkerIcon() {
+        let content;
+        if (!this.cursorMarkerElevation) {
+          content = 'Высота загружается...';
+        }
+        else {
+          content = `${this.cursorMarkerElevation} м`;
+        }
+        return { content };
       },
     },
     watch: {
@@ -263,11 +275,22 @@
         this.cursorMarkerCoords = coords;
         this.latitude = coords[0];
         this.longitude = coords[1];
+        this.loadElevation();
       },
       onCursorMarkerClick() {
         this.cursorMarkerCoords = null;
         this.latitude = '';
         this.longitude = '';
+      },
+      async loadElevation() {
+        this.cursorMarkerElevation = null;
+        const response = await axios.get('/api/v1/map-data/elevation', {
+          params: {
+            lat: this.latitude,
+            lon: this.longitude,
+          },
+        });
+        this.cursorMarkerElevation = response?.data?.elevation || null;
       },
 
       fillHeatmapParams(bounds) {
@@ -347,7 +370,7 @@
           });
 
           this.abortHeatmapRequestController = new AbortController();
-          let response = await axios.get('/api/v1/solar-insolation/heatmap', {
+          let response = await axios.get('/api/v1/map-data/heatmap', {
             params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
             signal: this.abortHeatmapRequestController.signal,
           });
@@ -368,80 +391,80 @@
 </script>
 
 <style scoped lang="scss">
-    .main-page {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+.main-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-        &__container {
-            width: 790px;
-            padding: 20px;
-        }
+  &__container {
+    width: 790px;
+    padding: 20px;
+  }
 
-        &__header {
-            font-size: 30px;
-            margin-bottom: 20px;
-        }
+  &__header {
+    font-size: 30px;
+    margin-bottom: 20px;
+  }
 
-        &__panel {
+  &__panel {
 
-            &-header {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+    &-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
 
-                font-size: 15px;
-            }
-
-            &-inputs {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
-
-                margin-top: 20px;
-                margin-bottom: 20px;
-
-                &-item {
-                    //margin-left: 20px;
-                    margin-right: 0;
-                    width: 50%;
-
-                    //&:first-child {
-                    //    margin-left: 0;
-                    //}
-                    &--margined {
-                        margin-left: 20px;
-
-                        &:first-child {
-                            margin-left: 0;
-                        }
-                    }
-                }
-
-                &--margined {
-                    flex-wrap: nowrap;
-                }
-
-
-            }
-        }
-
-        &__export-panel {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-
-            margin-top: 20px;
-        }
+      font-size: 15px;
     }
 
-    .ymap {
+    &-inputs {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
 
-        &__area {
-            height: 500px;
-            width: 750px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+
+      &-item {
+        //margin-left: 20px;
+        margin-right: 0;
+        width: 50%;
+
+        //&:first-child {
+        //    margin-left: 0;
+        //}
+        &--margined {
+          margin-left: 20px;
+
+          &:first-child {
+            margin-left: 0;
+          }
         }
+      }
+
+      &--margined {
+        flex-wrap: nowrap;
+      }
+
+
     }
+  }
+
+  &__export-panel {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    margin-top: 20px;
+  }
+}
+
+.ymap {
+
+  &__area {
+    height: 500px;
+    width: 750px;
+  }
+}
 </style>

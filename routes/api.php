@@ -17,7 +17,7 @@ Route::group([
     'prefix' => 'v1',
 ],
     function () {
-        require_once 'api/solar_insolation.php';
+        require_once 'api/map-data.php';
         require_once 'api/data_export.php';
     }
 );

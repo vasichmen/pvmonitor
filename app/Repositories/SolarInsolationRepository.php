@@ -21,4 +21,15 @@ class SolarInsolationRepository extends AbstractRepository implements SolarInsol
             ->inRandomOrder()
             ->get();
     }
+
+    public function getDiapasonForElevation(float $latFrom, float $latTo, float $lonFrom, float $lonTo)
+    {
+        return $this->model
+            ->select(['lat', 'lon', 'altitude'])
+            ->where('lat', '<=', $latTo)
+            ->where('lon', '<=', $lonTo)
+            ->where('lat', '>=', $latFrom)
+            ->where('lon', '>=', $lonFrom)
+            ->get();
+    }
 }
