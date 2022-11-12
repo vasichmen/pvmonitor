@@ -13,6 +13,15 @@ class SolarInsolation extends AbstractModel
         'diffuse',
         'altitude',
         'full_optimal',
+        'winter_solstice',
+        'summer_solstice',
+        'horizon_profile',
+    ];
+
+    protected $casts = [
+        'winter_solstice' => 'array',
+        'summer_solstice' => 'array',
+        'horizon_profile' => 'array',
     ];
 
     protected $primaryKey = ['lat', 'lon'];

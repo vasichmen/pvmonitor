@@ -20,6 +20,9 @@ return new class extends Migration {
             $table->double('direct');
             $table->double('diffuse');
             $table->double('altitude');
+            $table->json('winter_solstice');
+            $table->json('summer_solstice');
+            $table->json('horizon_profile');
             $table->timestamps();
 
             $table->primary(['lat', 'lon']);

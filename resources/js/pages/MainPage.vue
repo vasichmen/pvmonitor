@@ -69,7 +69,7 @@
             class="ymap__area"
             :coords="mapCoords"
             :zoom.sync="zoom"
-            :bounds="mapBounds"
+            :bounds="mapBoundsParam"
             :controls="['zoomControl','typeSelector']"
             @boundschange="onBoundsChange"
           >
@@ -155,12 +155,13 @@
       heatmapTarget: null,
       heatmap: null,
       rendering: false,
-      zoom: 8,
+      zoom: 6,
       cursorMarkerCoords: null,
       cursorMarkerElevation: null,
       exportDataLoading: false,
       heatmapLoading: false,
       mapCoords: [41, 75],
+      mapBoundsParam:[[],[]],
     }
     ),
     computed: {
@@ -252,6 +253,9 @@
     async mounted() {
       await loadYmap({ ...this.settings, debug: true });
       this.canInteractive = true;
+
+      //устанавливать границы надо после загрузки карты, чтоб правильно пересчитались значения
+      this.mapBoundsParam = this.mapBounds;
 
       this.fillHeatmapParams(this.$refs.map.bounds);
 

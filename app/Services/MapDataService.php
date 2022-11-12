@@ -14,13 +14,19 @@ use Illuminate\Support\Facades\Storage;
 class MapDataService extends AbstractService implements MapDataServiceContract
 {
 
+    //,lat,lon,full,full_optimal,direct,diffuse,altitude,created_at,updated_at,elevation_pvgis,winter_solstice,summer_solstice,horizon_profile
     const LATITUDE_FIELD = 'lat';
     const LONGITUDE_FIELD = 'lon';
-    const TOTAL_FIELD = 'ghi';
-    const DIRECT_FIELD = 'dni';
-    const DIFFUSE_FIELD = 'dif';
-    const TOTAL_OPTIMAL_FIELD = 'gti';
-    const ALTITUDE_FIELD = 'alt';
+    const TOTAL_FIELD = 'full';
+    const DIRECT_FIELD = 'direct';
+    const DIFFUSE_FIELD = 'diffuse';
+    const TOTAL_OPTIMAL_FIELD = 'full_optimal';
+    const ALTITUDE_FIELD = 'elevation_pvgis';
+    const WINTER_SOLSTICE = 'winter_solstice';
+    const SUMMER_SOLSTICE = 'summer_solstice';
+    const HORIZON_PROFILE = 'horizon_profile';
+
+
     const IMPORT_FILE_FIELDS = [
         self::LATITUDE_FIELD,
         self::LONGITUDE_FIELD,
@@ -29,6 +35,9 @@ class MapDataService extends AbstractService implements MapDataServiceContract
         self::DIRECT_FIELD,
         self::DIFFUSE_FIELD,
         self::ALTITUDE_FIELD,
+        self::WINTER_SOLSTICE,
+        self::SUMMER_SOLSTICE,
+        self::HORIZON_PROFILE,
     ];
 
     public function getHeatmap(array $params)
@@ -131,7 +140,7 @@ class MapDataService extends AbstractService implements MapDataServiceContract
 
             //проверка полей в файле
             $headerKeys = array_flip($headers);
-            foreach (self::IMPORT_FILE_FIELDS as $field){
+            foreach (self::IMPORT_FILE_FIELDS as $field) {
                 if (!isset($headerKeys[$field])) {
                     throw new \Exception('Не найдено поле ' . $field);
                 }
@@ -144,6 +153,9 @@ class MapDataService extends AbstractService implements MapDataServiceContract
             $directKey = $headerKeys[self::DIRECT_FIELD];
             $diffuseKey = $headerKeys[self::DIFFUSE_FIELD];
             $altitudeKey = $headerKeys[self::ALTITUDE_FIELD];
+            $winterSolsticeKey = $headerKeys[self::WINTER_SOLSTICE];
+            $summerSolsticeKey = $headerKeys[self::SUMMER_SOLSTICE];
+            $horizonProfileKey = $headerKeys[self::HORIZON_PROFILE];
 
             //обработка файла
             $row = 1;
@@ -167,6 +179,10 @@ class MapDataService extends AbstractService implements MapDataServiceContract
                 $direct = doubleval($values[$directKey] ?? -999);
                 $diffuse = doubleval($values[$diffuseKey] ?? -999);
                 $altitude = doubleval($values[$altitudeKey] ?? -999);
+                $winterSolstice = str_replace('\'', '"', $values[$winterSolsticeKey] ?? '[]');
+                $summerSolstice = str_replace('\'', '"', $values[$summerSolsticeKey] ?? '[]');
+                $horizonProfile = str_replace('\'', '"', $values[$horizonProfileKey] ?? '[]');
+
 
                 if ($total < 0 || $direct < 0 || $totalOptimal < 0 || $diffuse < 0) {
                     continue;
@@ -180,7 +196,11 @@ class MapDataService extends AbstractService implements MapDataServiceContract
                     'direct' => $direct,
                     'diffuse' => $diffuse,
                     'altitude' => $altitude,
+                    'winter_solstice' => $winterSolstice,
+                    'summer_solstice' => $summerSolstice,
+                    'horizon_profile' => $horizonProfile,
                 ];
+
             }
 
             SolarInsolation::upsert($upsertArray, ['lat', 'lon']);
