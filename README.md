@@ -3,3 +3,6 @@
 Вывод тепловой карты солнечных ресурсов на основе [vue-yandex-maps](https://vue-yandex-maps.github.io/). За основу тепловой карты взята билиотека [heatmap.js](https://www.patrick-wied.at/static/heatmapjs/docs.html), доработана для использования внутри VueJs-приложения. Серверная часть приложения работает на [Laravel 9](https://laravel.com/).
 
 Исходные данные по солнечной радиации и высотным отметкам получены из открытых источников и загружаются по api из базы данных. 
+
+![image](https://user-images.githubusercontent.com/10451213/201472753-0eb4114d-5fe3-41d5-b675-53f6a6934456.png)
+
