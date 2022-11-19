@@ -32,8 +32,10 @@ class ApiController extends Controller
         return app(PVGisServiceContract::class)->exportPvgisData($request->get('lat'), $request->get('lon'));
     }
 
-    public function getElevation(Request $request): JsonResponse
+    public function getPointData(Request $request): JsonResponse
     {
-        return new JsonResponse(['elevation' => app(MapDataServiceContract::class)->getElevation($request->get('lat'), $request->get('lon'))]);
+        return new JsonResponse([
+            'point_data' => app(MapDataServiceContract::class)->getPointData($request->get('lat'), $request->get('lon'))
+        ]);
     }
 }

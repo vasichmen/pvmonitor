@@ -112,23 +112,21 @@ class MapDataService extends AbstractService implements MapDataServiceContract
     }
 
 
-    /**Возвращает высоту над у.м.
+    /**Возвращает данные в заданной точке (ближайшие к заданной)
      * @param  float  $lat
      * @param  float  $lon
-     * @return void
+     * @return SolarInsolation|null
      */
-    public function getElevation(float $lat, float $lon)
+    public function getPointData(float $lat, float $lon): ?SolarInsolation
     {
         $latFrom = round($lat, 2) - 0.02;
         $latTo = round($lat, 2) + 0.02;
         $lonFrom = round($lon, 2) - 0.02;
         $lonTo = round($lon, 2) + 0.02;
 
-        $data = app(SolarInsolationRepositoryContract::class)->getDiapasonForElevation($latFrom, $latTo, $lonFrom, $lonTo);
+        $data = app(SolarInsolationRepositoryContract::class)->getDiapason($latFrom, $latTo, $lonFrom, $lonTo);
 
-        $nearest = app(CoordinateServiceContract::class)->getNearestPoint($data, $lat, $lon);
-
-        return $nearest?->altitude;
+        return app(CoordinateServiceContract::class)->getNearestPoint($data, $lat, $lon);
     }
 
     public function importFile(string $filePath, ?callable $notify = null)

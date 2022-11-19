@@ -4,6 +4,9 @@
       <div class="main-page__header">
         Карта ресурсов солнечного излучения Кыргызстана
       </div>
+      <div class="ymap__cursor-pointer">
+        $[properties.iconContent]
+      </div>
       <div class="main-page__panel">
         <div class="main-page__panel-header">
           Координаты местности
@@ -107,7 +110,9 @@
 </template>
 
 <script>
-  import initHeatmap from '@/heatmap.js';
+  import { CURSOR_MARKER_ICON_TEMPLATE } from '@/const';
+  import initHeatmap from '@/utils/heatmap.js';
+  import renderYmapPointer from '@/utils/render-ymap-pointer';
   import axios from 'axios';
   import fileDownload from 'js-file-download';
   import { loadYmap, yandexMap, ymapMarker } from 'vue-yandex-maps';
@@ -157,11 +162,11 @@
       rendering: false,
       zoom: 6,
       cursorMarkerCoords: null,
-      cursorMarkerElevation: null,
+      cursorMarkerData: null,
       exportDataLoading: false,
       heatmapLoading: false,
       mapCoords: [41, 75],
-      mapBoundsParam:[[],[]],
+      mapBoundsParam: [[], []],
     }
     ),
     computed: {
@@ -213,13 +218,19 @@
       },
       cursorMarkerIcon() {
         let content;
-        if (!this.cursorMarkerElevation) {
-          content = 'Высота загружается...';
+        if (!this.cursorMarkerData) {
+          content = 'Данные загружаются...';
         }
         else {
-          content = `${this.cursorMarkerElevation} м`;
+          content = renderYmapPointer(this.cursorMarkerData);
         }
-        return { content };
+        return {
+          content,
+          layout: 'default#imageWithContent',
+          imageSize: [0, 0],
+          contentOffset: [-15, 10],
+          contentLayout: CURSOR_MARKER_ICON_TEMPLATE,
+        };
       },
     },
     watch: {
@@ -256,7 +267,6 @@
 
       //устанавливать границы надо после загрузки карты, чтоб правильно пересчитались значения
       this.mapBoundsParam = this.mapBounds;
-
       this.fillHeatmapParams(this.$refs.map.bounds);
 
       this.heatmapTarget = document.getElementById('map');
@@ -287,14 +297,14 @@
         this.longitude = '';
       },
       async loadElevation() {
-        this.cursorMarkerElevation = null;
-        const response = await axios.get('/api/v1/map-data/elevation', {
+        this.cursorMarkerData = null;
+        const response = await axios.get('/api/v1/map-data/point-data', {
           params: {
             lat: this.latitude,
             lon: this.longitude,
           },
         });
-        this.cursorMarkerElevation = response?.data?.elevation || null;
+        this.cursorMarkerData = response?.data?.point_data || null;
       },
 
       fillHeatmapParams(bounds) {
@@ -351,7 +361,7 @@
           return;
         }
 
-        //прерываем предыдкщий запрос
+        //прерываем предыдущий запрос
         if (this.heatmapLoading) {
           this.abortHeatmapRequestController.abort();
         }
@@ -374,6 +384,7 @@
           });
 
           this.abortHeatmapRequestController = new AbortController();
+          console.log(this.heatmapParams);
           let response = await axios.get('/api/v1/map-data/heatmap', {
             params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
             signal: this.abortHeatmapRequestController.signal,
@@ -394,81 +405,112 @@
   };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .main-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  &__container {
-    width: 790px;
-    padding: 20px;
-  }
-
-  &__header {
-    font-size: 30px;
-    margin-bottom: 20px;
-  }
-
-  &__panel {
-
-    &-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-
-      font-size: 15px;
-    }
-
-    &-inputs {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-
-      margin-top: 20px;
-      margin-bottom: 20px;
-
-      &-item {
-        //margin-left: 20px;
-        margin-right: 0;
-        width: 50%;
-
-        //&:first-child {
-        //    margin-left: 0;
-        //}
-        &--margined {
-          margin-left: 20px;
-
-          &:first-child {
-            margin-left: 0;
-          }
-        }
-      }
-
-      &--margined {
-        flex-wrap: nowrap;
-      }
-
-
-    }
-  }
-
-  &__export-panel {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 
-    margin-top: 20px;
-  }
+    &__container {
+        width: 790px;
+        padding: 20px;
+    }
+
+    &__header {
+        font-size: 30px;
+        margin-bottom: 20px;
+    }
+
+    &__panel {
+
+        &-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            font-size: 15px;
+        }
+
+        &-inputs {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+
+            margin-top: 20px;
+            margin-bottom: 20px;
+
+            &-item {
+                margin-right: 0;
+                width: 50%;
+
+                &--margined {
+                    margin-left: 20px;
+
+                    &:first-child {
+                        margin-left: 0;
+                    }
+                }
+            }
+
+            &--margined {
+                flex-wrap: nowrap;
+            }
+
+
+        }
+    }
+
+    &__export-panel {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+
+        margin-top: 20px;
+    }
 }
 
 .ymap {
 
-  &__area {
-    height: 500px;
-    width: 750px;
-  }
+    &__area {
+        height: 500px;
+        width: 750px;
+    }
+
+    &__cursor-pointer {
+        $background-color:#606266;
+
+        background-color: $background-color;
+        color: white;
+        width: max-content;
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        position: relative;
+
+        border-radius: 0 2px 2px 2px;
+
+
+        &:before {
+            $height: 10px;
+
+            content: " ";
+
+            position:absolute;
+            overflow:hidden;
+            width: 30px;
+            height:$height;
+            line-height: 30px;
+
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: $height solid $background-color;
+
+            top: -$height;
+            left: 0;
+        }
+    }
 }
 </style>
