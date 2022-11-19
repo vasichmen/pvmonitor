@@ -4,9 +4,6 @@
       <div class="main-page__header">
         Карта ресурсов солнечного излучения Кыргызстана
       </div>
-      <div class="ymap__cursor-pointer">
-        $[properties.iconContent]
-      </div>
       <div class="main-page__panel">
         <div class="main-page__panel-header">
           Координаты местности
