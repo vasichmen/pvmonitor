@@ -18,8 +18,8 @@ class SolarInsolationRepository extends AbstractRepository implements SolarInsol
             ->where('lat', '>=', $min['lat'])
             ->where('lon', '>=', $min['lon'])
             ->take($limit)
-            ->orderBy('random')
-//            ->inRandomOrder()
+//            ->orderBy('random')
+            ->inRandomOrder()
             ->get();
     }
 
