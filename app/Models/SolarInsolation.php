@@ -16,6 +16,7 @@ class SolarInsolation extends AbstractModel
         'winter_solstice',
         'summer_solstice',
         'horizon_profile',
+        'random',
     ];
 
     protected $casts = [

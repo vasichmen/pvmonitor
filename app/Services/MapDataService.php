@@ -197,6 +197,7 @@ class MapDataService extends AbstractService implements MapDataServiceContract
                     'winter_solstice' => $winterSolstice,
                     'summer_solstice' => $summerSolstice,
                     'horizon_profile' => $horizonProfile,
+                    'random' => random_int(0, 2147483647),
                 ];
 
             }
