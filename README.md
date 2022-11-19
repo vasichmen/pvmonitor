@@ -4,5 +4,6 @@
 
 Исходные данные по солнечной радиации и высотным отметкам получены из открытых источников и загружаются по api из базы данных. 
 
-![image](https://user-images.githubusercontent.com/10451213/201472753-0eb4114d-5fe3-41d5-b675-53f6a6934456.png)
+![image](https://user-images.githubusercontent.com/10451213/202866121-b38e7c53-3dc1-4382-b248-90622fa49172.png)
+
 
