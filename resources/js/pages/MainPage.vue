@@ -13,13 +13,13 @@
             v-model="latitude"
             class="main-page__panel-inputs-item main-page__panel-inputs-item--margined"
             :value="latitude"
-            placeholder="Широта. Например, 41.39956"
+            placeholder="Широта. Например, 41.57"
           />
           <el-input
             v-model="longitude"
             class="main-page__panel-inputs-item main-page__panel-inputs-item--margined"
             :value="longitude"
-            placeholder="Долгота. Например, 75.39956"
+            placeholder="Долгота. Например, 75.39"
           />
         </div>
         <div class="main-page__panel-header">
@@ -284,8 +284,8 @@
       onPolygonClick(event) {
         const coords = event.get('coords');
         this.cursorMarkerCoords = coords;
-        this.latitude = coords[0];
-        this.longitude = coords[1];
+        this.latitude = coords[0].toFixed(2);
+        this.longitude = coords[1].toFixed(2);
         this.loadElevation();
       },
       onCursorMarkerClick() {
