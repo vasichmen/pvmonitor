@@ -13,7 +13,7 @@ class ImportSolarInsolationFileCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'import:solar-insolation {--file= : название файла в папке storage/db_sources}';
+    protected $signature = 'import:solar-insolation {--file=solar_insolations_v2.0.csv : название файла в папке storage/db_sources}';
 
     /**
      * The console command description.
@@ -31,7 +31,7 @@ class ImportSolarInsolationFileCommand extends Command
     {
         $filepath = $this->option('file') ?? throw new \Exception("Файл не задан");
         $filepath = '/db_sources/' . $filepath;
-        app(MapDataServiceContract::class)->importFile($filepath, function ($message) {
+        app(MapDataServiceContract::class)->importDataFile($filepath, function ($message) {
             $this->info($message);
         });
 

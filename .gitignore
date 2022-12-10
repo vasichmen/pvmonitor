@@ -21,3 +21,5 @@ yarn-error.log
 /.idea
 /.vscode
 /output.txt
+/storage/app/db_sources/*
+!/storage/app/db_sources/.gitkeep

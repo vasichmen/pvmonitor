@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Storage;
 
 class MapDataService extends AbstractService implements MapDataServiceContract
 {
-
-    //,lat,lon,full,full_optimal,direct,diffuse,altitude,created_at,updated_at,elevation_pvgis,winter_solstice,summer_solstice,horizon_profile
     const LATITUDE_FIELD = 'lat';
     const LONGITUDE_FIELD = 'lon';
     const TOTAL_FIELD = 'full';
@@ -129,7 +127,7 @@ class MapDataService extends AbstractService implements MapDataServiceContract
         return app(CoordinateServiceContract::class)->getNearestPoint($data, $lat, $lon);
     }
 
-    public function importFile(string $filePath, ?callable $notify = null)
+    public function importDataFile(string $filePath, ?callable $primaryKey = null)
     {
         try {
             //проверка заголовков
@@ -161,8 +159,8 @@ class MapDataService extends AbstractService implements MapDataServiceContract
             while ($values = fgetcsv($resource)) {
                 $row++;
 
-                if ($row % 100 === 0 && $notify) {
-                    $notify('Обрабатывается ряд ' . $row);
+                if ($row % 100 === 0 && $primaryKey) {
+                    $primaryKey('Обрабатывается ряд ' . $row);
                 }
 
                 if (count($upsertArray) === 100) {

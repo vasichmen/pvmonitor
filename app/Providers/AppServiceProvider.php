@@ -9,12 +9,16 @@ class AppServiceProvider extends ServiceProvider
 {
     private array $modelList = [
         'SolarInsolation',
+        'Inverter',
+        'Module',
     ];
 
     private array $serviceList = [
         'MapData',
         'Coordinate',
         'PVGis',
+        'Inverter',
+        'Module',
     ];
 
 
