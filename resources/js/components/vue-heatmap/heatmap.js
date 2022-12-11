@@ -319,11 +319,11 @@ export default function () {
         var container = config.container;
         var shadowCanvas = this.shadowCanvas = document.createElement('canvas');
         var canvas = this.canvas = config.canvas || document.createElement('canvas');
-        var renderBoundaries = this._renderBoundaries = [10000, 10000, 0, 0];
+        this._renderBoundaries = [10000, 10000, 0, 0];
 
         var computed = getComputedStyle(config.container) || {};
 
-        canvas.className = 'heatmap-canvas';
+        canvas.className = 'heatmap__canvas';
 
         this._width =
           canvas.width =
@@ -339,13 +339,8 @@ export default function () {
         this.shadowCtx = shadowCanvas.getContext('2d');
         this.ctx = canvas.getContext('2d');
 
-        // @TODO:
-        // conditional wrapper
-
-        canvas.style.cssText = shadowCanvas.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;';
         canvas.id = 'heatmap-canvas';
 
-        container.style.position = 'relative';
         container.appendChild(canvas);
 
         this._palette = _getColorPalette(config);

@@ -56,41 +56,44 @@
           </el-checkbox>
         </div>
       </div>
-      <div
+      <vue-heatmap
         v-loading="heatmapLoading"
-        class="map__container"
+        :is-visible="canShowHeatmap"
+        :point-data="heatmapData"
+        :point-radius="heatmapPointRadius"
       >
-        <div
-          id="map"
-          class="ymap"
-        >
-          <yandex-map
-            ref="map"
-            class="ymap__area"
-            :coords="mapCoords"
-            :zoom.sync="zoom"
-            :bounds="mapBoundsParam"
-            :controls="['zoomControl','typeSelector']"
-            @boundschange="onBoundsChange"
+        <template #default>
+          <div
+            class="ymap"
           >
-            <ymap-marker
-              :coords="countryPolygonCoordinates"
-              marker-type="polygon"
-              marker-id="country-polygon"
-              :marker-fill="{color:'#eab925', opacity:0.5}"
-              @click="onPolygonClick"
-            />
-            <ymap-marker
-              v-if="cursorMarkerCoords"
-              marker-type="placemark"
-              marker-id="cursor-marker"
-              :icon="cursorMarkerIcon"
-              :coords="cursorMarkerCoords"
-              @click="onCursorMarkerClick"
-            />
-          </yandex-map>
-        </div>
-      </div>
+            <yandex-map
+              ref="map"
+              class="ymap__area"
+              :coords="mapCoords"
+              :zoom.sync="zoom"
+              :bounds="mapBoundsParam"
+              :controls="['zoomControl','typeSelector']"
+              @boundschange="onBoundsChange"
+            >
+              <ymap-marker
+                :coords="countryPolygonCoordinates"
+                marker-type="polygon"
+                marker-id="country-polygon"
+                :marker-fill="{color:'#eab925', opacity:0.5}"
+                @click="onPolygonClick"
+              />
+              <ymap-marker
+                v-if="cursorMarkerCoords"
+                marker-type="placemark"
+                marker-id="cursor-marker"
+                :icon="cursorMarkerIcon"
+                :coords="cursorMarkerCoords"
+                @click="onCursorMarkerClick"
+              />
+            </yandex-map>
+          </div>
+        </template>
+      </vue-heatmap>
       <div class="main-page__export-panel">
         <el-button
           v-loading="exportDataLoading"
@@ -107,8 +110,8 @@
 </template>
 
 <script>
+  import VueHeatmap from '@/components/vue-heatmap/vue-heatmap.vue';
   import { CURSOR_MARKER_ICON_TEMPLATE } from '@/const';
-  import initHeatmap from '@/utils/heatmap.js';
   import renderYmapPointer from '@/utils/render-ymap-pointer';
   import axios from 'axios';
   import fileDownload from 'js-file-download';
@@ -117,7 +120,7 @@
 
   export default {
     name: 'main-page',
-    components: { yandexMap, ymapMarker },
+    components: { VueHeatmap, yandexMap, ymapMarker },
     props: {
       countryPolygonCoordinates: {
         type: Array,
@@ -150,6 +153,9 @@
           min: { lat: 0, lon: 0 },
           max: { lat: 0, lon: 0 },
         },
+      },
+      heatmapData: {
+        data: [],
       },
 
       canInteractive: false,
@@ -210,7 +216,7 @@
           case 13:
             return 80;
           default:
-            throw Error('Этот масштаб не реализован');
+            return 0;
         }
       },
       cursorMarkerIcon() {
@@ -265,9 +271,6 @@
       //устанавливать границы надо после загрузки карты, чтоб правильно пересчитались значения
       this.mapBoundsParam = this.mapBounds;
       this.fillHeatmapParams(this.$refs.map.bounds);
-
-      this.heatmapTarget = document.getElementById('map');
-      this.heatmapFactory = initHeatmap();
     },
     methods: {
       onBoundsChange(event) {
@@ -346,13 +349,7 @@
        * @returns {Promise<void>}
        */
       async renderHeatmap() {
-        //если уже была создана тепловая карта, то удаляем
-        if (this.heatmap) {
-          const tag = document.getElementById('heatmap-canvas');
-          if (tag) {
-            tag.remove();
-          }
-        }
+        this.heatmapData.data = [];
 
         if (!this.canShowHeatmap) {
           return;
@@ -365,28 +362,13 @@
 
         try {
           this.heatmapLoading = true;
-
-          this.heatmap = this.heatmapFactory.create({
-            container: this.heatmapTarget,
-            radius: this.heatmapPointRadius,
-            maxOpacity: .2,
-            minOpacity: 0,
-            blur: 0.9,
-            defaultGradient: {
-              0.25: 'rgb(0,0,255)',
-              0.55: 'rgb(0,255,0)',
-              0.85: 'yellow',
-              1.0: 'rgb(255,0,0)',
-            },
-          });
-
           this.abortHeatmapRequestController = new AbortController();
-          console.log(this.heatmapParams);
+
           let response = await axios.get('/api/v1/map-data/heatmap', {
             params: { ...this.heatmapParams, limit: this.heatmapPointsLimit },
             signal: this.abortHeatmapRequestController.signal,
           });
-          this.heatmap.setData(response.data);
+          this.heatmapData = response.data;
           this.heatmapLoading = false;
         }
         catch (e) {
@@ -476,7 +458,7 @@
     }
 
     &__cursor-pointer {
-        $background-color:#606266;
+        $background-color: #606266;
 
         background-color: $background-color;
         color: white;
@@ -495,10 +477,10 @@
 
             content: " ";
 
-            position:absolute;
-            overflow:hidden;
+            position: absolute;
+            overflow: hidden;
             width: 30px;
-            height:$height;
+            height: $height;
             line-height: 30px;
 
             border-left: 15px solid transparent;
