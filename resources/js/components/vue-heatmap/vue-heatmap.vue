@@ -1,14 +1,16 @@
 <template>
   <div
-    id="heatmap-container"
-    class="heatmap__container"
+    :id="containerId"
+    class="vue-heatmap__container"
   >
     <slot name="default"></slot>
   </div>
 </template>
 
 <script>
+  import { CANVAS_ID, CONTAINER_ID } from '@/components/vue-heatmap/const';
   import initHeatmap from '@/components/vue-heatmap/heatmap.js';
+
 
   export default {
     name: 'vue-heatmap',
@@ -68,6 +70,11 @@
         heatmap: null,
       };
     },
+    computed: {
+      containerId() {
+        return CONTAINER_ID;
+      },
+    },
     watch: {
       'pointData.data': {
         handler(data) {
@@ -91,14 +98,14 @@
       },
     },
     mounted() {
-      this.heatmapTarget = document.getElementById('heatmap-container');
+      this.heatmapTarget = document.getElementById(CONTAINER_ID);
       this.heatmapFactory = initHeatmap();
     },
     methods: {
       renderHeatmap(data) {
         //если уже была создана тепловая карта, то удаляем
         if (this.heatmap) {
-          const tag = document.getElementById('heatmap-canvas');
+          const tag = document.getElementById(CANVAS_ID);
           if (tag) {
             tag.remove();
           }
@@ -127,7 +134,7 @@
 </script>
 
 <style lang="scss">
-.heatmap {
+.vue-heatmap {
     &__container {
         position: relative;
     }
