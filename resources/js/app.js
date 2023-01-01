@@ -9,6 +9,7 @@ import store from './store';
 import { createInertiaApp } from '@inertiajs/inertia-vue';
 import ElementPlugin from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
+import VueHeatmap from '@vasichmen/vue-heatmap';
 
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
@@ -40,6 +41,7 @@ createInertiaApp({
   setup({ el, App, props, plugin }) {
     Vue.use(plugin);
     Vue.use(ElementPlugin);
+    Vue.use(VueHeatmap);
 
     new Vue({
       store,

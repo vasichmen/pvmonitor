@@ -110,7 +110,6 @@
 </template>
 
 <script>
-  import VueHeatmap from '@/components/vue-heatmap/vue-heatmap.vue';
   import { CURSOR_MARKER_ICON_TEMPLATE } from '@/const';
   import renderYmapPointer from '@/utils/render-ymap-pointer';
   import axios from 'axios';
@@ -120,7 +119,7 @@
 
   export default {
     name: 'main-page',
-    components: { VueHeatmap, yandexMap, ymapMarker },
+    components: { yandexMap, ymapMarker },
     props: {
       countryPolygonCoordinates: {
         type: Array,
