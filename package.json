@@ -24,7 +24,7 @@
     "dependencies": {
         "@inertiajs/inertia": "^0.11.0",
         "@inertiajs/inertia-vue": "^0.8.0",
-        "@vasichmen/vue-heatmap": "^0.2.0",
+        "@vasichmen/vue-heatmap": "^0.2.3",
         "element-ui": "^2.15.10",
         "eslint": "^8.24.0",
         "eslint-plugin-vue": "^9.5.1",
